@@ -25,8 +25,16 @@ pub mod voting {
         candidate.candidate_name = candidate_name;
         candidate.candidate_votes = 0;
 
+        let poll = &mut ctx.accounts.poll;
+        poll.candidates += 1;
+
         Ok(())
     }
+
+
+    // pub fn vote(ctx: Context<Vote>, _poll_id: u64, _candidate_name: String) -> Result<()> {
+    //     Ok(())
+    // }
 
 }
 

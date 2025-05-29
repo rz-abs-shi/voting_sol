@@ -49,6 +49,14 @@ describe('voting', () => {
 
   it("Initialize Candidate", async () => {
 
+    const [pollAddress] = PublicKey.findProgramAddressSync(
+      [new anchor.BN(1).toArrayLike(Buffer, 'le', 8)],
+      votingAddress
+    );
+
+    let poll = await votingProgram.account.poll.fetch(pollAddress);
+    expect(poll.candidates.toNumber()).toEqual(0);
+
     await votingProgram.methods.initCandidate(
       new anchor.BN(1),
       "Phyciscs",
@@ -63,6 +71,9 @@ describe('voting', () => {
     expect(physicsCandidate.candidateName).toEqual('Phyciscs');
     expect(physicsCandidate.candidateVotes.toNumber()).toEqual(0);
 
+    poll = await votingProgram.account.poll.fetch(pollAddress);
+    expect(poll.candidates.toNumber()).toEqual(1);
+
     await votingProgram.methods.initCandidate(
       new anchor.BN(1),
       "Math",
@@ -76,6 +87,9 @@ describe('voting', () => {
     const mathCandidate = await votingProgram.account.candidate.fetch(mathAddress);
     expect(mathCandidate.candidateName).toEqual('Math');
     expect(mathCandidate.candidateVotes.toNumber()).toEqual(0);
+
+    poll = await votingProgram.account.poll.fetch(pollAddress);
+    expect(poll.candidates.toNumber()).toEqual(2);
 
   });
 
