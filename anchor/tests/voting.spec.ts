@@ -33,8 +33,10 @@ describe('voting', () => {
       votingAddress
     );
 
-    console.log('pollAddress');
-    console.log(pollAddress);
+    const poll = await votingProgram.account.poll.fetch(pollAddress);
 
+    expect(poll.pollId.toNumber()).toEqual(1);
+    expect(poll.description).toEqual('Which science do you prefer to delve in?');
+    expect(poll.pollStart.toNumber()).toBeLessThan(poll.pollEnd.toNumber());
   });
 });
