@@ -93,5 +93,30 @@ describe('voting', () => {
 
   });
 
+  it("Vote", async () => {
+
+    await votingProgram.methods.vote(
+      new anchor.BN(1),
+      "Phyciscs",
+    ).rpc();
+
+
+    const [phyciscsAddress] = PublicKey.findProgramAddressSync(
+      [new anchor.BN(1).toArrayLike(Buffer, 'le', 8), Buffer.from("Phyciscs")],
+      votingAddress
+    );
+
+    const physicsCandidate = await votingProgram.account.candidate.fetch(phyciscsAddress);
+    expect(physicsCandidate.candidateVotes.toNumber()).toEqual(1);
+
+    // const [mathAddress] = PublicKey.findProgramAddressSync(
+    //   [new anchor.BN(1).toArrayLike(Buffer, 'le', 8), Buffer.from("Math")],
+    //   votingAddress
+    // );
+
+    // const mathCandidate = await votingProgram.account.candidate.fetch(mathAddress);
+    // expect(mathCandidate.candidateVotes.toNumber()).toEqual(0);
+
+  });
 
 });
