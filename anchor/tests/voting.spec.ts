@@ -11,16 +11,21 @@ const votingAddress = new PublicKey('coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF
 
 describe('voting', () => {
 
-  it('Initialize Poll', async () => {
 
-    const context = await startAnchor("", [{name: "voting", programId: votingAddress}], []);
-    const provider = new BankrunProvider(context);
-  
-    const votingProgram = new Program<Voting>(
+  let context;
+  let provider;
+  let votingProgram: Program<Voting>;
+
+  beforeAll(async () => {
+    context = await startAnchor("", [{name: "voting", programId: votingAddress}], []);
+    provider = new BankrunProvider(context);
+    votingProgram = new Program<Voting>(
       IDL,
       provider,
     );
+  });
   
+  it('Initialize Poll', async () => {
     await votingProgram.methods.initPoll(
       new anchor.BN(1),
       "Which science do you prefer to delve in?",
@@ -38,5 +43,41 @@ describe('voting', () => {
     expect(poll.pollId.toNumber()).toEqual(1);
     expect(poll.description).toEqual('Which science do you prefer to delve in?');
     expect(poll.pollStart.toNumber()).toBeLessThan(poll.pollEnd.toNumber());
+
+
   });
+
+  it("Initialize Candidate", async () => {
+
+    await votingProgram.methods.initCandidate(
+      new anchor.BN(1),
+      "Phyciscs",
+    ).rpc();
+
+    const [phyciscsAddress] = PublicKey.findProgramAddressSync(
+      [new anchor.BN(1).toArrayLike(Buffer, 'le', 8), Buffer.from("Phyciscs")],
+      votingAddress
+    );
+
+    const physicsCandidate = await votingProgram.account.candidate.fetch(phyciscsAddress);
+    expect(physicsCandidate.candidateName).toEqual('Phyciscs');
+    expect(physicsCandidate.candidateVotes.toNumber()).toEqual(0);
+
+    await votingProgram.methods.initCandidate(
+      new anchor.BN(1),
+      "Math",
+    ).rpc();
+
+    const [mathAddress] = PublicKey.findProgramAddressSync(
+      [new anchor.BN(1).toArrayLike(Buffer, 'le', 8), Buffer.from("Math")],
+      votingAddress
+    );
+
+    const mathCandidate = await votingProgram.account.candidate.fetch(mathAddress);
+    expect(mathCandidate.candidateName).toEqual('Math');
+    expect(mathCandidate.candidateVotes.toNumber()).toEqual(0);
+
+  });
+
+
 });
