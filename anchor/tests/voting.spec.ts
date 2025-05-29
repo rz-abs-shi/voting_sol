@@ -1,76 +1,40 @@
 import * as anchor from '@coral-xyz/anchor'
 import {Program} from '@coral-xyz/anchor'
-import {Keypair} from '@solana/web3.js'
+import {Keypair, PublicKey} from '@solana/web3.js'
 import {Voting} from '../target/types/voting'
+import { BankrunProvider, startAnchor } from 'anchor-bankrun';
+
+const IDL = require('../target/idl/voting.json');
+
+const votingAddress = new PublicKey('coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF');
+
 
 describe('voting', () => {
-  // Configure the client to use the local cluster.
-  const provider = anchor.AnchorProvider.env()
-  anchor.setProvider(provider)
-  const payer = provider.wallet as anchor.Wallet
 
-  const program = anchor.workspace.Voting as Program<Voting>
+  it('Initialize Poll', async () => {
 
-  const votingKeypair = Keypair.generate()
+    const context = await startAnchor("", [{name: "voting", programId: votingAddress}], []);
+    const provider = new BankrunProvider(context);
+  
+    const votingProgram = new Program<Voting>(
+      IDL,
+      provider,
+    );
+  
+    await votingProgram.methods.initPoll(
+      new anchor.BN(1),
+      "Which science do you prefer to delve in?",
+      new anchor.BN(0),
+      new anchor.BN(1841447913),
+    ).rpc();
 
-  it('Initialize Voting', async () => {
-    await program.methods
-      .initialize()
-      .accounts({
-        voting: votingKeypair.publicKey,
-        payer: payer.publicKey,
-      })
-      .signers([votingKeypair])
-      .rpc()
+    const [pollAddress] = PublicKey.findProgramAddressSync(
+      [new anchor.BN(1).toArrayLike(Buffer, 'le', 8)],
+      votingAddress
+    );
 
-    const currentCount = await program.account.voting.fetch(votingKeypair.publicKey)
+    console.log('pollAddress');
+    console.log(pollAddress);
 
-    expect(currentCount.count).toEqual(0)
-  })
-
-  it('Increment Voting', async () => {
-    await program.methods.increment().accounts({ voting: votingKeypair.publicKey }).rpc()
-
-    const currentCount = await program.account.voting.fetch(votingKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(1)
-  })
-
-  it('Increment Voting Again', async () => {
-    await program.methods.increment().accounts({ voting: votingKeypair.publicKey }).rpc()
-
-    const currentCount = await program.account.voting.fetch(votingKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(2)
-  })
-
-  it('Decrement Voting', async () => {
-    await program.methods.decrement().accounts({ voting: votingKeypair.publicKey }).rpc()
-
-    const currentCount = await program.account.voting.fetch(votingKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(1)
-  })
-
-  it('Set voting value', async () => {
-    await program.methods.set(42).accounts({ voting: votingKeypair.publicKey }).rpc()
-
-    const currentCount = await program.account.voting.fetch(votingKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(42)
-  })
-
-  it('Set close the voting account', async () => {
-    await program.methods
-      .close()
-      .accounts({
-        payer: payer.publicKey,
-        voting: votingKeypair.publicKey,
-      })
-      .rpc()
-
-    // The account should no longer exist, returning null.
-    const userAccount = await program.account.voting.fetchNullable(votingKeypair.publicKey)
-    expect(userAccount).toBeNull()
-  })
-})
+  });
+});
