@@ -6,7 +6,7 @@ import { BankrunProvider, startAnchor } from 'anchor-bankrun';
 
 const IDL = require('../target/idl/voting.json');
 
-const votingAddress = new PublicKey('coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF');
+const votingAddress = new PublicKey('4XEukxWHuUJBrP93cx4ePWvjd987pSJaGtoSidPiMuWw');
 
 
 describe('voting', () => {
@@ -16,7 +16,13 @@ describe('voting', () => {
   let provider;
   let votingProgram: Program<Voting>;
 
+  // TO ENTRACT WITH DEPLOYED PROGRAM 
+  // let votingProgram = anchor.workspace.Voting as Program<Voting>;
+  // anchor.setProvider(anchor.AnchorProvider.env());
+
+
   beforeAll(async () => {
+    // TO ENTRACT WITH BANKRUN TEST PROGRAM 
     context = await startAnchor("", [{name: "voting", programId: votingAddress}], []);
     provider = new BankrunProvider(context);
     votingProgram = new Program<Voting>(
